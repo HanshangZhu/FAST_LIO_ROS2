@@ -59,8 +59,15 @@ find_package(std_srvs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(pcl_ros REQUIRED)
 find_package(pcl_conversions REQUIRED)
-find_package(livox_ros_driver2 REQUIRED)
+find_package(livox_ros_driver2 QUIET)
 find_package(rosidl_default_generators REQUIRED)
+
+if(livox_ros_driver2_FOUND)
+  message(STATUS "livox_ros_driver2 found, Livox LiDAR support enabled.")
+  add_definitions(-DLIVOX_ROS_DRIVER2_FOUND)
+else()
+  message(STATUS "livox_ros_driver2 NOT found, building without Livox support (Velodyne/Ouster only).")
+endif()
 
 set(dependencies
   rclcpp
@@ -73,8 +80,11 @@ set(dependencies
   visualization_msgs
   pcl_ros
   pcl_conversions
-  livox_ros_driver2
 )
+
+if(livox_ros_driver2_FOUND)
+  list(APPEND dependencies livox_ros_driver2)
+endif()
 
 # Thirdparty libraries
 find_package(Eigen3 REQUIRED)
@@ -89,6 +99,7 @@ set(msg_files
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   ${msg_files}
+  SKIP_INSTALL  # Only need C++ typesupport, skip Python bindings (avoids rosidl_generator_py issues)
 )
 ament_export_dependencies(rosidl_default_runtime)
 
